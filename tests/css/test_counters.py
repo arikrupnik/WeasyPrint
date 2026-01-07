@@ -297,8 +297,6 @@ def test_counters_page_footnote():
     pages = render_pages('''
       <style>
         h1 {break-before: always}
-        h2::before { content: counter(h); }
-        h2 { counter-increment: h; }
         @page { counter-reset: footnote 1; }
       </style>
       <h1>Page 1</h1>
