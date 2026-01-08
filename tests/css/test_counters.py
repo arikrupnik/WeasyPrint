@@ -271,11 +271,12 @@ def test_counters_page_regular():
     # all counters of the same name within the document."
     pages = render_pages('''
       <style>
-        h1 {break-before: always}
+        h1 { break-before: always; }
         h2::before { content: counter(h); }
         h2 { counter-increment: h; }
-        @page { counter-reset: h 101;
-          @bottom-right { content: counter(h) }
+        @page {
+          counter-reset: h 101;
+          @bottom-right { content: counter(h); }
         }
       </style>
       <h1>Page 1</h1>
@@ -304,7 +305,7 @@ def test_counters_page_footnote():
     # "The footnote counter may be reset on each page."
     pages = render_pages('''
       <style>
-        h1 {break-before: always}
+        h1 { break-before: always; }
         @page { counter-reset: footnote 1; }
       </style>
       <h1>Page 1</h1>
