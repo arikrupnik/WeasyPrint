@@ -265,6 +265,66 @@ def test_counters_9():
 
 
 @assert_no_logs
+def test_counters_page_regular():
+    # "If a [regular] counter is reset or incremented within the page
+    # context, it is in scope for all page-margin boxes and obscures
+    # all counters of the same name within the document."
+    pages = render_pages('''
+      <style>
+        h1 { break-before: always; }
+        h2::before { content: counter(h); }
+        h2 { counter-increment: h; }
+        @page {
+          counter-reset: h 101;
+          @bottom-right { content: counter(h); }
+        }
+      </style>
+      <h1>Page 1</h1>
+      <h2>heading a</h2>
+      <h2>heading b</h2>
+      <h1>Page 2</h1>
+      <h2>heading c</h2>
+      <h2>heading d</h2>
+    ''')
+    assert len(pages) == 2
+    for page in pages:
+        html, bottom_right = pages[1].children
+        # in page context, `counter-reset: h 101' creates a new
+        # counter whose value is 101 on every page
+        assert bottom_right.children[0].children[0].text == "101"
+    # but in the body, the counter `h' continues incrementing
+    # independently of the counter in page context
+    body, = html.children
+    h1, h2c, h2d = body.children
+    assert h2c.children[0].children[0].children[0].text == "3"
+    assert h2d.children[0].children[0].children[0].text == "4"
+
+
+@assert_no_logs
+def test_counters_page_footnote():
+    # "The footnote counter may be reset on each page."
+    pages = render_pages('''
+      <style>
+        h1 { break-before: always; }
+        @page { counter-reset: footnote 1; }
+      </style>
+      <h1>Page 1</h1>
+      <span style="float: footnote">footnote a</span>
+      <span style="float: footnote">footnote b</span>
+      <h1>Page 2</h1>
+      <span style="float: footnote">footnote c</span>
+      <span style="float: footnote">footnote d</span>
+    ''')
+    assert len(pages) == 2
+    html,footnote_area = pages[1].children
+    body, = html.children
+    h1, h1body = body.children
+    footnote_call_c, _, footnote_call_d, _ = h1body.children[0].children
+    assert footnote_call_c.children[0].text == "1"
+    assert footnote_call_d.children[0].text == "2"
+
+
+@assert_no_logs
 def test_counter_styles_1():
     assert_tree(parse_all('''
       <style>
