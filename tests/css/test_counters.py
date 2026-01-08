@@ -274,7 +274,9 @@ def test_counters_page_regular():
         h1 {break-before: always}
         h2::before { content: counter(h); }
         h2 { counter-increment: h; }
-        @page { counter-reset: h; }
+        @page { counter-reset: h 101;
+          @bottom-right { content: counter(h) }
+        }
       </style>
       <h1>Page 1</h1>
       <h2>heading a</h2>
@@ -284,7 +286,13 @@ def test_counters_page_regular():
       <h2>heading d</h2>
     ''')
     assert len(pages) == 2
-    html, = pages[1].children
+    for page in pages:
+        html, bottom_right = pages[1].children
+        # in page context, `counter-reset: h 101' creates a new
+        # counter whose value is 101 on every page
+        assert bottom_right.children[0].children[0].text == "101"
+    # but in the body, the counter `h' continues incrementing
+    # independently of the counter in page context
     body, = html.children
     h1, h2c, h2d = body.children
     assert h2c.children[0].children[0].children[0].text == "3"
